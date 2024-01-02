@@ -1,0 +1,13 @@
+max30102.c:32:6:max30102_init	2
+max30102.c:77:9:max30102_getUnreadSampleCount	2
+max30102.c:88:6:max30102_getFIFO	3
+max30102.c:104:9:max30102_getStatus	1
+max30102.c:128:6:max30102_OFF	1
+max30102.c:136:6:max30102_ON	1
+max30102.c:158:6:filter	2
+max30102.c:172:6:buffInsert	2
+max30102.c:184:6:calAcDc	6
+max30102.c:210:6:max30102_cal	11
+max30102.c:255:9:max30102_getHeartRate	1
+max30102.c:256:9:max30102_getSpO2	1
+max30102.c:257:9:max30102_getDiff	1

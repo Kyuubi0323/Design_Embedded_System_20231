@@ -1,0 +1,7 @@
+freertos.c:121:6:MX_FREERTOS_Init	1
+freertos.c:182:6:LCD_func	1
+freertos.c:207:6:LED_func	1
+freertos.c:228:6:max30102_task	1
+freertos.c:245:6:Uart_task	1
+freertos.c:264:6:Callback_timer	1
+freertos.c:273:6:HAL_UART_RxCpltCallback	2
