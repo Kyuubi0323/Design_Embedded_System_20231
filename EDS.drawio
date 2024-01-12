@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2024-01-12T09:18:37.685Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0" etag="GuVeI68OQSqkUQIIEcOn" version="22.1.18" type="github">
+<mxfile host="app.diagrams.net" modified="2024-01-12T09:19:16.170Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0" etag="-5mQ9JFrBlQpGLiISK26" version="22.1.18" type="github">
   <diagram name="Page-1" id="iqymPxwa6M4NADhz_kM7">
-    <mxGraphModel dx="1560" dy="702" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1424" dy="567" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -144,13 +144,16 @@
         <mxCell id="22cjTa-Sl4Jnt1EvgP7J-71" value="Turn off LCD" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="740" y="490" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="yDHo1bB7oZjuLkqzl0Rd-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="22cjTa-Sl4Jnt1EvgP7J-73">
+        <mxCell id="yDHo1bB7oZjuLkqzl0Rd-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.479;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="22cjTa-Sl4Jnt1EvgP7J-73" target="yDHo1bB7oZjuLkqzl0Rd-23">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="629.6470588235293" y="730" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="570" y="630" />
+            </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="22cjTa-Sl4Jnt1EvgP7J-73" value="Read All sensors&lt;br&gt;Resume(LCD)" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="570" y="615" width="120" height="60" as="geometry" />
+          <mxGeometry x="570" y="600" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="22cjTa-Sl4Jnt1EvgP7J-76" value="Reset" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
           <mxGeometry x="280" y="470" width="50" height="30" as="geometry" />
