@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2024-01-12T09:20:40.375Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0" etag="TBbJslfM5VlnsiClaCfe" version="22.1.18" type="github">
+<mxfile host="app.diagrams.net" modified="2024-01-12T09:28:44.771Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0" etag="bQfRCTM1G6fdkuIeknMo" version="22.1.18" type="github">
   <diagram name="Page-1" id="iqymPxwa6M4NADhz_kM7">
     <mxGraphModel dx="1560" dy="702" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
@@ -99,8 +99,8 @@
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="280" y="510" />
-              <mxPoint x="280" y="350" />
-              <mxPoint x="660" y="350" />
+              <mxPoint x="280" y="360" />
+              <mxPoint x="660" y="360" />
               <mxPoint x="660" y="398" />
             </Array>
             <mxPoint x="220" y="510" as="sourcePoint" />
@@ -113,9 +113,13 @@
         <mxCell id="22cjTa-Sl4Jnt1EvgP7J-58" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="22cjTa-Sl4Jnt1EvgP7J-56" target="22cjTa-Sl4Jnt1EvgP7J-57" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="22cjTa-Sl4Jnt1EvgP7J-61" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="22cjTa-Sl4Jnt1EvgP7J-56" edge="1">
+        <mxCell id="22cjTa-Sl4Jnt1EvgP7J-61" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="22cjTa-Sl4Jnt1EvgP7J-56" edge="1" target="yDHo1bB7oZjuLkqzl0Rd-29">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="70" y="740" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="70" y="610" />
+              <mxPoint x="70" y="840" />
+            </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="22cjTa-Sl4Jnt1EvgP7J-56" value="Mode" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
@@ -245,6 +249,9 @@
         </mxCell>
         <mxCell id="yDHo1bB7oZjuLkqzl0Rd-27" value="IRQ" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="20" y="510" width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="yDHo1bB7oZjuLkqzl0Rd-29" value="Transfer data via UART to PC" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="810" width="120" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
