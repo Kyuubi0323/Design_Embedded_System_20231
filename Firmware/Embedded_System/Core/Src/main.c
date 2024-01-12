@@ -19,7 +19,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
-#include "dma.h"
 #include "i2c.h"
 #include "spi.h"
 #include "tim.h"
@@ -34,7 +33,7 @@
 #include "ili9341.h"
 #include "touch.h"
 #include "fonts.h"
-
+#include "UartRingbuffer.h"
 
 /* USER CODE END Includes */
 
@@ -99,12 +98,11 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_DMA_Init();
-  MX_USART1_UART_Init();
   MX_I2C1_Init();
-  MX_TIM5_Init();
   MX_SPI1_Init();
   MX_USART2_UART_Init();
+  MX_TIM11_Init();
+  MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -184,9 +182,10 @@ int fputc(int ch, FILE *f)
 {
   /* Place your implementation of fputc here */
   /* e.g. write a character to the UART3 and Loop until the end of transmission */
-  HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 10);
+  HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, 10);
   return ch;
 }
+
 /* USER CODE END 4 */
 
 /**
@@ -206,7 +205,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
-
+  if (htim->Instance == TIM11)
+  {
+//	  HAL_TIM_Base_Stop_IT(htim);
+//	  if (Button_1.state == false)
+  }
   /* USER CODE END Callback 1 */
 }
 

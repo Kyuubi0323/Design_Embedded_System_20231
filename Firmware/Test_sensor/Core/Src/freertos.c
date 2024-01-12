@@ -146,8 +146,7 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	//HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-//	HAL_UART_Transmit(&huart1, (uint8_t *)TxBuffer, strlen(TxBuffer), 500);
+
     osDelay(1000);
   }
   /* USER CODE END StartDefaultTask */
@@ -167,6 +166,7 @@ void Sensor_task(void *argument)
   /* Infinite loop */
   for(;;)
   {
+	  HAL_UART_Transmit(&huart1, (uint8_t *) "oke\r\n", 5, 100);
 	  if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12) == GPIO_PIN_RESET)
 		  {
 			  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);

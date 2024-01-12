@@ -3,7 +3,7 @@
 #include "stm32f4xx_hal.h"
 #include "touch.h"
 #include <stdio.h>
-
+#include "usart.h"
 #define READ_X 0xD0
 #define READ_Y 0x90
 
@@ -62,9 +62,10 @@ bool ILI9341_TouchGetCoordinates(uint16_t* x, uint16_t* y) {
 
     //char data[50];
     // Uncomment this line to calibrate touchscreen:
-    //sprintf(data, "raw_x = %ld, raw_y = %ld\n\0", raw_x, raw_y);
-    //uint32_t data[] = {raw_x, raw_y};
-    //HAL_UART_Transmit(&huart3, data, sizeof(data), 10);
+//    uint32_t data[] = {raw_x, raw_y};
+//    sprintf(data, "raw_x = %ld, raw_y = %ld\n\0", raw_x, raw_y);
+//
+//    HAL_UART_Transmit(&huart1, data, sizeof(data), 10);
 
     *x = (raw_x - ILI9341_TOUCH_MIN_RAW_X) * ILI9341_TOUCH_SCALE_X / (ILI9341_TOUCH_MAX_RAW_X - ILI9341_TOUCH_MIN_RAW_X);
     *y = (raw_y - ILI9341_TOUCH_MIN_RAW_Y) * ILI9341_TOUCH_SCALE_Y / (ILI9341_TOUCH_MAX_RAW_Y - ILI9341_TOUCH_MIN_RAW_Y);

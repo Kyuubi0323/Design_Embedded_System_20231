@@ -30,7 +30,7 @@ extern SPI_HandleTypeDef ILI9341_SPI_PORT;
 #define ILI9341_LED_GPIO_Port GPIOB
 
 
-#define ROTATION    0
+#define ROTATION   1
 
 #if ROTATION == 0
 #define ILI9341_WIDTH  240

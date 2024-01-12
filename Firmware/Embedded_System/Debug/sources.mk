@@ -23,8 +23,12 @@ C_DEPS :=
 # Every subdirectory with source files must be described here
 SUBDIRS := \
 Core/Src \
+Core/Startup/common \
+Core/Startup/delay_timer \
+Core/Startup/dht11 \
 Core/Startup/ili9341 \
 Core/Startup/max30102 \
+Core/Startup/ringbuf \
 Core/Startup \
 Drivers/STM32F4xx_HAL_Driver \
 Middlewares/FreeRTOS \

@@ -7,7 +7,7 @@
 /*** Redefine if necessary ***/
 
 // Warning! Use SPI bus with < 1.3 Mbit speed, better ~650 Kbit to be save.
-#define ILI9341_TOUCH_SPI_PORT hspi1
+#define ILI9341_TOUCH_SPI_PORT hspi2
 extern SPI_HandleTypeDef ILI9341_TOUCH_SPI_PORT;
 
 #define ILI9341_TOUCH_IRQ_Pin       GPIO_PIN_8
@@ -25,6 +25,8 @@ extern SPI_HandleTypeDef ILI9341_TOUCH_SPI_PORT;
 #define ILI9341_TOUCH_MIN_RAW_Y 2000
 #define ILI9341_TOUCH_MAX_RAW_Y 31500
 
+typedef void (*pFunc_t)(void);
+
 typedef struct
 {
 	uint16_t pos_x;
@@ -37,7 +39,7 @@ typedef struct
 	uint16_t color;
 
 	bool state;
-	//pFunc_t pHandlerFunc;
+	pFunc_t pHandlerFunc;
 } myButton_t;
 // call before initializing any SPI devices
 void ILI9341_TouchUnselect();

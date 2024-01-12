@@ -11,8 +11,12 @@ RM := rm -rf
 -include sources.mk
 -include Middlewares/FreeRTOS/subdir.mk
 -include Drivers/STM32F4xx_HAL_Driver/subdir.mk
+-include Core/Startup/ringbuf/subdir.mk
 -include Core/Startup/max30102/subdir.mk
 -include Core/Startup/ili9341/subdir.mk
+-include Core/Startup/dht11/subdir.mk
+-include Core/Startup/delay_timer/subdir.mk
+-include Core/Startup/common/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
 -include objects.mk
