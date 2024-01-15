@@ -9,8 +9,8 @@
 //#define TYPE_DHT22
 
 
-#define DHT_PORT GPIOC
-#define DHT_PIN GPIO_PIN_14
+#define DHT_PORT GPIOA
+#define DHT_PIN GPIO_PIN_1
 
 
 

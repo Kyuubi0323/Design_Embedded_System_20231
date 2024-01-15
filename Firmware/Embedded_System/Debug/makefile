@@ -68,7 +68,7 @@ main-build: Embedded_System.elf secondary-outputs
 
 # Tool invocations
 Embedded_System.elf Embedded_System.map: $(OBJS) $(USER_OBJS) D:\Advance_Kyuubi_Main_1S\MANDEVICES\Git_clone\Design_Embedded_System_20231\Firmware\Embedded_System\STM32F401CCUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Embedded_System.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\Advance_Kyuubi_Main_1S\MANDEVICES\Git_clone\Design_Embedded_System_20231\Firmware\Embedded_System\STM32F401CCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Embedded_System.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+	arm-none-eabi-gcc -o "Embedded_System.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\Advance_Kyuubi_Main_1S\MANDEVICES\Git_clone\Design_Embedded_System_20231\Firmware\Embedded_System\STM32F401CCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Embedded_System.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

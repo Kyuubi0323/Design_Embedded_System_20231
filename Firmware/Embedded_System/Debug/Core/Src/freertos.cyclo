@@ -1,9 +1,8 @@
-freertos.c:192:6:MX_FREERTOS_Init	1
-freertos.c:266:6:LCD_task	2
-freertos.c:363:6:IRQ_task	5
-freertos.c:439:6:Uart_task	2
-freertos.c:472:6:Action_Timer	1
-freertos.c:480:6:LCD_Timeout	1
-freertos.c:490:6:Measure_Timer	2
+freertos.c:186:6:MX_FREERTOS_Init	1
+freertos.c:254:6:LCD_task	2
+freertos.c:376:6:IRQ_task	5
+freertos.c:440:6:Uart_task	2
+freertos.c:461:6:LCD_Timeout	1
+freertos.c:472:6:Measure_Timer	2
 freertos.c:508:6:HAL_GPIO_EXTI_Callback	2
-freertos.c:516:6:HAL_UART_RxHalfCpltCallback	2
+freertos.c:520:6:HAL_UART_RxCpltCallback	2

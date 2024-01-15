@@ -44,6 +44,7 @@
 #include "fonts.h"
 #include "UartRingbuffer.h"
 #include "common.h"
+#include "dht11.h"
 //#include "dht11.h"
 //#include "delay_timer.h"
 /* USER CODE END Includes */
@@ -91,14 +92,18 @@ typedef struct
 const char *TAG = "Task";
 
 #define Timeout 			60000
-#define MeasurePeriod 		3000
+#define MeasurePeriod 		5000
 #define	ActionPeriod 		15000
+
+#define BUFFER_ACTION 50
 
 Node Node_1 = {0, 0, 0, 0};
 Time_check Time_keeper = {{0}, {0}, {0} };
 Device_t Mode = ACTIVE;
 myButton_t Button_1 = {30, 170, 20, 0, 0, ILI9341_LIGHTBLUE, false, NULL};
 myButton_t Button_2 = {290, 170, 20, 0, 0, ILI9341_LIGHTBLUE, false, NULL};
+
+char payload[BUFFER_ACTION];
 
 
 /* USER CODE END PD */
@@ -132,17 +137,12 @@ osThreadId_t Uart_userHandle;
 const osThreadAttr_t Uart_user_attributes = {
   .name = "Uart_user",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for SuperQueue */
 osMessageQueueId_t SuperQueueHandle;
 const osMessageQueueAttr_t SuperQueue_attributes = {
   .name = "SuperQueue"
-};
-/* Definitions for Timer01 */
-osTimerId_t Timer01Handle;
-const osTimerAttr_t Timer01_attributes = {
-  .name = "Timer01"
 };
 /* Definitions for Timer02 */
 osTimerId_t Timer02Handle;
@@ -164,11 +164,6 @@ osSemaphoreId_t Uart_binaryHandle;
 const osSemaphoreAttr_t Uart_binary_attributes = {
   .name = "Uart_binary"
 };
-/* Definitions for PcSema */
-osSemaphoreId_t PcSemaHandle;
-const osSemaphoreAttr_t PcSema_attributes = {
-  .name = "PcSema"
-};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -178,7 +173,6 @@ const osSemaphoreAttr_t PcSema_attributes = {
 void LCD_task(void *argument);
 void IRQ_task(void *argument);
 void Uart_task(void *argument);
-void Action_Timer(void *argument);
 void LCD_Timeout(void *argument);
 void Measure_Timer(void *argument);
 
@@ -207,17 +201,11 @@ void MX_FREERTOS_Init(void) {
   /* creation of Uart_binary */
   Uart_binaryHandle = osSemaphoreNew(1, 1, &Uart_binary_attributes);
 
-  /* creation of PcSema */
-  PcSemaHandle = osSemaphoreNew(4, 4, &PcSema_attributes);
-
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
 
   /* Create the timer(s) */
-  /* creation of Timer01 */
-  Timer01Handle = osTimerNew(Action_Timer, osTimerPeriodic, NULL, &Timer01_attributes);
-
   /* creation of Timer02 */
   Timer02Handle = osTimerNew(LCD_Timeout, osTimerOnce, NULL, &Timer02_attributes);
 
@@ -270,6 +258,8 @@ void LCD_task(void *argument)
 	char StrgHumd[3];
 	char Strgbpm[4] ;
 	char Strgspo2[4];
+//	char *payload = {0};
+
 	//Display
 	ILI9341_Unselect();
 	ILI9341_TouchUnselect();
@@ -279,36 +269,53 @@ void LCD_task(void *argument)
 	ILI9341_WriteString(10, 10, "Embedded Design System 20231", Font_11x18, ILI9341_WHITE, ILI9341_BLACK);
 	ILI9341_WriteString(30, 40, "20202647", Font_7x10, ILI9341_WHITE, ILI9341_BLACK);
 	ILI9341_WriteString(235, 40, "20202543", Font_7x10, ILI9341_WHITE, ILI9341_BLACK);
-	ILI9341_DrawLine(0, 50, 320, 50, ILI9341_WHITE);
+	ILI9341_DrawLine(0, 55, 320, 55, ILI9341_WHITE);
 	ILI9341_DrawLine(0, 200, 320, 200, ILI9341_WHITE);
+	ILI9341_DrawLine(250, 55, 250, 200, ILI9341_WHITE);
+	ILI9341_WriteString(10, 180, "Mode:", Font_11x18, ILI9341_WHITE, ILI9341_BLACK);
 	ILI9341_WriteString(100, 210, "MANDEVICES", Font_11x18, ILI9341_RED, ILI9341_BLACK);
 
 	//Data
 	ILI9341_WriteString(10, 60, "Temperature:", Font_11x18, ILI9341_WHITE, ILI9341_BLACK);
-	ftoa(Node_1.Temperature, StrgTemp, 2);
+	ftoa(Node_1.Temperature, StrgTemp, 1);
 	ILI9341_WriteString(150, 60, StrgTemp, Font_11x18, ILI9341_ORANGE, ILI9341_BLACK);
 
-	ILI9341_WriteString(10, 80, "Humidity:", Font_11x18, ILI9341_WHITE, ILI9341_BLACK);
+	ILI9341_WriteString(10, 90, "Humidity:", Font_11x18, ILI9341_WHITE, ILI9341_BLACK);
 	intToStr((int)Node_1.Humidity, StrgHumd, 2);
-	ILI9341_WriteString(150, 80, StrgHumd, Font_11x18, ILI9341_BLUE, ILI9341_BLACK);
-	ILI9341_WriteString(180, 80, "%", Font_11x18, ILI9341_BLUE, ILI9341_BLACK);
+	ILI9341_WriteString(150, 90, StrgHumd, Font_11x18, ILI9341_BLUE, ILI9341_BLACK);
+	ILI9341_WriteString(180, 90, "%", Font_11x18, ILI9341_BLUE, ILI9341_BLACK);
 
-	ILI9341_WriteString(10, 100, "BPM:", Font_11x18, ILI9341_WHITE, ILI9341_BLACK);
+	ILI9341_WriteString(10, 120, "BPM:", Font_11x18, ILI9341_WHITE, ILI9341_BLACK);
 	intToStr(Node_1.bpm, Strgbpm, 2);
-	ILI9341_WriteString(150, 100, Strgbpm, Font_11x18, ILI9341_GREEN, ILI9341_BLACK);
+	ILI9341_WriteString(150, 120, Strgbpm, Font_11x18, ILI9341_GREEN, ILI9341_BLACK);
 
-	ILI9341_WriteString(10, 120, "Spo2:", Font_11x18, ILI9341_WHITE, ILI9341_BLACK);
+	ILI9341_WriteString(10, 150, "Spo2:", Font_11x18, ILI9341_WHITE, ILI9341_BLACK);
 	intToStr(Node_1.spo2, Strgspo2, 2);
-	ILI9341_WriteString(150, 120, Strgspo2, Font_11x18, ILI9341_PINK, ILI9341_BLACK);
+	ILI9341_WriteString(150, 150, Strgspo2, Font_11x18, ILI9341_PINK, ILI9341_BLACK);
+
+
 
 	//button
-	ILI9341_DrawCircle(Button_1.pos_x, Button_1.pos_y, Button_1.shape_r, ILI9341_LIGHTBLUE);
-	ILI9341_DrawCircle(Button_1.pos_x, Button_1.pos_y, Button_1.shape_r/4, ILI9341_LIGHTBLUE);
-	ILI9341_DrawCircle(Button_2.pos_x, Button_2.pos_y, Button_2.shape_r, ILI9341_LIGHTBLUE);
-	ILI9341_DrawCircle(Button_2.pos_x, Button_2.pos_y, Button_2.shape_r/4, ILI9341_LIGHTBLUE);
+//	ILI9341_DrawCircle(Button_1.pos_x, Button_1.pos_y, Button_1.shape_r, ILI9341_LIGHTBLUE);
+//	ILI9341_DrawCircle(Button_1.pos_x, Button_1.pos_y, Button_1.shape_r/4, ILI9341_LIGHTBLUE);
+//	ILI9341_DrawCircle(Button_2.pos_x, Button_2.pos_y, Button_2.shape_r, ILI9341_LIGHTBLUE);
+//	ILI9341_DrawCircle(Button_2.pos_x, Button_2.pos_y, Button_2.shape_r/4, ILI9341_LIGHTBLUE);
 
+
+//	if (Button_1.state == 1)
+//		{
+//			ILI9341_WriteString(200, 100, "OK ", Font_11x18, ILI9341_BLUE, ILI9341_BLACK);
+//			ILI9341_FillCircle(Button_1.pos_x, Button_1.pos_y + 0.5, Button_1.shape_r, ILI9341_BLUE);
+//			ILI9341_DrawCircle(Button_1.pos_x, Button_1.pos_y, Button_1.shape_r/4, ILI9341_BLACK);
+//		}
+//	else
+//		{
+//			ILI9341_WriteString(200, 100, "nOK", Font_11x18, ILI9341_RED, ILI9341_BLACK);
+//			ILI9341_FillCircle(Button_1.pos_x, Button_1.pos_y, Button_1.shape_r, ILI9341_RED);
+//			ILI9341_DrawCircle(Button_1.pos_x, Button_1.pos_y, Button_1.shape_r/4, ILI9341_BLACK);
+//		}
 	//start timer and softimer
-	osTimerStart(Timer01Handle, ActionPeriod);
+	//osTimerStart(Timer01Handle, ActionPeriod);
 	osTimerStart(Timer02Handle, Timeout);
 	osTimerStart(Timer03Handle, MeasurePeriod);
 	//ILI9341_WriteString(150, 180, "Start Timer", Font_11x18, ILI9341_PINK, ILI9341_BLACK);
@@ -321,28 +328,38 @@ void LCD_task(void *argument)
 	Time_keeper.LCD_Time[0] = HAL_GetTick();
 	//Update
 
-	ftoa(Node_1.Temperature, StrgTemp, 2);
+	ftoa(Node_1.Temperature, StrgTemp, 1);
 	ILI9341_WriteString(150, 60, StrgTemp, Font_11x18, ILI9341_ORANGE, ILI9341_BLACK);
 
 	intToStr((int)Node_1.Humidity, StrgHumd, 2);
-	ILI9341_WriteString(150, 80, StrgHumd, Font_11x18, ILI9341_BLUE, ILI9341_BLACK);
-	ILI9341_WriteString(180, 80, "%", Font_11x18, ILI9341_BLUE, ILI9341_BLACK);
+	ILI9341_WriteString(150, 90, StrgHumd, Font_11x18, ILI9341_BLUE, ILI9341_BLACK);
+	ILI9341_WriteString(180, 90, "%", Font_11x18, ILI9341_BLUE, ILI9341_BLACK);
 
 	intToStr(Node_1.bpm, Strgbpm, 2);
-	ILI9341_WriteString(150, 100, Strgbpm, Font_11x18, ILI9341_GREEN, ILI9341_BLACK);
+	ILI9341_WriteString(150, 120, Strgbpm, Font_11x18, ILI9341_GREEN, ILI9341_BLACK);
 
 	intToStr(Node_1.spo2, Strgspo2, 2);
-	ILI9341_WriteString(150, 120, Strgspo2, Font_11x18, ILI9341_PINK, ILI9341_BLACK);
+	ILI9341_WriteString(150, 150, Strgspo2, Font_11x18, ILI9341_PINK, ILI9341_BLACK);
 	//check button state
 	if (Button_1.state == 1)
-	{
-		ILI9341_WriteString(200, 100, "OK", Font_11x18, ILI9341_GREEN, ILI9341_BLACK);
-	}
+		{
+			ILI9341_WriteString(260, 120, "Bad ", Font_11x18, ILI9341_RED, ILI9341_BLACK);
+//			ILI9341_FillCircle(Button_1.pos_x, Button_1.pos_y + 0.5, Button_1.shape_r, ILI9341_BLUE);
+//			ILI9341_DrawCircle(Button_1.pos_x, Button_1.pos_y, Button_1.shape_r/4, ILI9341_BLACK);
+		}
 	else
-	{
-		ILI9341_WriteString(200, 100, "nOK", Font_11x18, ILI9341_GREEN, ILI9341_BLACK);
-	}
-	HAL_UART_Transmit(&huart2, (uint8_t *) "Le\r\n", 3, 50);
+		{
+			ILI9341_WriteString(260, 120 , "Good", Font_11x18, ILI9341_GREEN, ILI9341_BLACK);
+//			ILI9341_FillCircle(Button_1.pos_x, Button_1.pos_y, Button_1.shape_r, ILI9341_RED);
+//			ILI9341_DrawCircle(Button_1.pos_x, Button_1.pos_y, Button_1.shape_r/4, ILI9341_BLACK);
+		}
+
+//	char* payload;
+//	sprintf(payload, "{temp}: %2.2f, {humd}: %2f %, {bpm}: %2d, {spo2}: %2d \r\n", Node_1.Temperature, Node_1.Humidity, Node_1.bpm, Node_1.spo2);
+//	HAL_UART_Transmit(&huart2, (uint8_t *) payload, strlen(payload), 200);
+
+//	memset(payload, 0, strlen(payload));
+
 	Time_keeper.LCD_Time[1] = HAL_GetTick();
 	Time_keeper.LCD_Time[2] = Time_keeper.LCD_Time[1] - Time_keeper.LCD_Time[0];
   }
@@ -360,7 +377,7 @@ void IRQ_task(void *argument)
 {
   /* USER CODE BEGIN IRQ_task */
 	uint32_t currentTick = 0, lastTick = 0;
-	uint16_t x, y;
+
   /* Infinite loop */
   for(;;)
   {
@@ -368,17 +385,19 @@ void IRQ_task(void *argument)
 	{
 		Time_keeper.IRQ_Time[0] = HAL_GetTick();
 		osDelay(100);
+
 		//debounce irq touch
 		currentTick = HAL_GetTick();
-		osThreadResume(LCDHandle);
 		if ((HAL_GPIO_ReadPin(T_IRQ_GPIO_Port, T_IRQ_Pin) == 0) && (currentTick - lastTick > 500))
 		{
+			osThreadResume(LCDHandle);
+			HAL_UART_Transmit(&huart2, (uint8_t *) "[Action]: Touch\r\n", 17, 10);
 			lastTick = currentTick;
 
 			//init spi touch
-//			HAL_SPI_DeInit(&hspi1);
-//			hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
-//			HAL_SPI_Init(&hspi1);
+			HAL_SPI_DeInit(&hspi1);
+			hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
+			HAL_SPI_Init(&hspi1);
 //			while(ILI9341_TouchGetCoordinates(&x, &y) != true);
 //			ILI9341_WriteString(x, y, "touch", Font_11x18, ILI9341_GREEN, ILI9341_BLACK);
 //			HAL_SPI_DeInit(&hspi2);
@@ -393,26 +412,12 @@ void IRQ_task(void *argument)
 			{
 				Mode = ACTIVE;
 				HAL_GPIO_WritePin(LCD_LED_GPIO_Port, LCD_LED_Pin, 1);
-//				ILI9341_WriteString(140, 170, "Wake", Font_11x18, ILI9341_GREEN, ILI9341_BLACK);
+				HAL_UART_Transmit(&huart2, (uint8_t *) "[Action]: Wake\r\n", 16, 10);
 				osThreadResume(LCDHandle);
 			}
 			else
 			{
-//				//Touch Handler
-//				if ((x >= Button_1.pos_y) && (x <= (Button_1.pos_y + Button_1.shape_r))
-//						&& (y >= Button_1.pos_x) && (y <= (Button_1.pos_x + Button_1.shape_r)))
-//				{
-//					if (Button_1.state == false)
-//					{
-//						Button_1.state = true;
-//						ILI9341_WriteString(180, 190, "okelah vcl", Font_11x18, ILI9341_YELLOW, ILI9341_BLACK);
-//					}
-//					else
-//					{
-//						Button_1.state = false;
-//						ILI9341_WriteString(180, 190, "deooke", Font_11x18, ILI9341_YELLOW, ILI9341_BLACK);
-//					}
-//				}
+				HAL_UART_Transmit(&huart2, (uint8_t *) "[Action]: Active\r\n", 18, 10);
 			}
 			osTimerStart(Timer02Handle, Timeout);
 			Time_keeper.IRQ_Time[1] = HAL_GetTick();
@@ -435,41 +440,21 @@ void IRQ_task(void *argument)
 void Uart_task(void *argument)
 {
   /* USER CODE BEGIN Uart_task */
-	#define BUFFER_ACTION 50
+
+
 	Ringbuf_init();
 	char* action[BUFFER_ACTION];
-	osThreadSuspend(Uart_userHandle);
-	osSemaphoreAcquire(Uart_binaryHandle, portMAX_DELAY);
-	ILI9341_WriteString(180, 190, "Rx mode", Font_11x18, ILI9341_YELLOW, ILI9341_BLACK);
-	osSemaphoreRelease(Uart_binaryHandle);
-	//osSemaphoreRelease(Uart_binaryHandle);
+	ILI9341_WriteString(150, 180, "Init   ", Font_11x18, ILI9341_YELLOW, ILI9341_BLACK);
+
   /* Infinite loop */
   for(;;)
   {
-	  if(Wait_for("action"))
-	  {
-		  Get_after("action", 10, action);
-		  ILI9341_WriteString(180, 190, "Receive", Font_11x18, ILI9341_YELLOW, ILI9341_BLACK);
-		  Uart_sendstring(action);
-		  osThreadResume(LCDHandle);
-		  osThreadResume(IRQHandle);
-	  }
-	  else
-	  {
-		  ILI9341_WriteString(180, 190, "Not_Receive", Font_11x18, ILI9341_YELLOW, ILI9341_BLACK);
-		  osThreadResume(LCDHandle);
-		  osThreadResume(IRQHandle);
-	  }
+	  if (osSemaphoreAcquire(Uart_binaryHandle, portMAX_DELAY) == osOK)
+		  {
+		  HAL_UART_Transmit(&huart2, (uint8_t *) "[Action]: Acquire\r\n", 18, 10);
+		  }
   }
   /* USER CODE END Uart_task */
-}
-
-/* Action_Timer function */
-void Action_Timer(void *argument)
-{
-  /* USER CODE BEGIN Action_Timer */
-
-  /* USER CODE END Action_Timer */
 }
 
 /* LCD_Timeout function */
@@ -478,6 +463,7 @@ void LCD_Timeout(void *argument)
   /* USER CODE BEGIN LCD_Timeout */
 	HAL_GPIO_WritePin(LCD_LED_GPIO_Port, LCD_LED_Pin, 0);
 	Mode = SLEEP;
+	HAL_UART_Transmit(&huart2, (uint8_t *) "[Action]: Sleep\r\n", 17, 10);
 	osThreadSuspend(LCDHandle);
   /* USER CODE END LCD_Timeout */
 }
@@ -486,14 +472,32 @@ void LCD_Timeout(void *argument)
 void Measure_Timer(void *argument)
 {
   /* USER CODE BEGIN Measure_Timer */
-	ILI9341_WriteString(180, 190, "timer3", Font_11x18, ILI9341_YELLOW, ILI9341_BLACK);
+	DHT_DataTypedef DHT;
+	char str[20];
+	ILI9341_WriteString(150, 180, "Measure", Font_11x18, ILI9341_YELLOW, ILI9341_BLACK);
 	Time_keeper.Measure_Time[0] = HAL_GetTick();
+	HAL_UART_Transmit(&huart2, (uint8_t *) "[Action]: Measure\r\n", 19, 100);
+
+
+	//DHT_GetData(&DHT);
+//	uint8_t temp = DHT.Temperature;
+//	sprintf(str, "temp: %ld\r\n", temp);
+//	HAL_UART_Transmit(&huart2, (uint8_t*)str, strlen(str), 100);
+//	HAL_UART_Transmit(&huart2, (uint8_t*) "vailz", 6, 10);
+
+
+
+
+
+
+
+
+
 
 	Time_keeper.Measure_Time[1] = HAL_GetTick();
 	Time_keeper.Measure_Time[2] = Time_keeper.Measure_Time[1] - Time_keeper.Measure_Time[0];
-
-	osSemaphoreRelease(PcSemaHandle);
-
+	osDelay(1000);
+	ILI9341_WriteString(150, 180, "Idle   ", Font_11x18, ILI9341_YELLOW, ILI9341_BLACK);
 	if (Mode == ACTIVE)
 		osThreadResume(LCDHandle);
   /* USER CODE END Measure_Timer */
@@ -506,14 +510,24 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   if (GPIO_Pin == T_IRQ_Pin)
   {
 	  	Button_1.state = !Button_1.state;
+	  	Node_1.Temperature = 22.5;
+	  	Node_1.bpm = 110;
+	  	Node_1.Humidity = 82.0;
+	  	Node_1.spo2 = 85;
 		osSemaphoreRelease(Touch_binaryHandle);
   }
 }
-void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart)
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
+
 	if (huart == &huart2)
 	{
-		ILI9341_WriteString(180, 190, "Rxt mode", Font_11x18, ILI9341_YELLOW, ILI9341_BLACK);
+		HAL_UART_Transmit(&huart2, (uint8_t *) "[Action]: EXTI\r\n", 17, 10);
+		ILI9341_WriteString(150, 180, "Uart   ", Font_11x18, ILI9341_YELLOW, ILI9341_BLACK);
+		osDelay(1000);
+		HAL_UART_Receive_IT(&huart2, (uint8_t*) payload, sizeof(payload));
+		osThreadSuspend(LCDHandle);
+		osThreadSuspend(IRQHandle);
 		osSemaphoreRelease(Uart_binaryHandle);
 	}
 }

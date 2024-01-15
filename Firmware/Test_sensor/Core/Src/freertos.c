@@ -28,6 +28,7 @@
 #include "i2c.h"
 #include "max30102.h"
 #include "usart.h"
+#include "dht11.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
@@ -146,8 +147,8 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-
-    osDelay(1000);
+	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2);
+    		osDelay(1000);
   }
   /* USER CODE END StartDefaultTask */
 }
@@ -162,25 +163,19 @@ void StartDefaultTask(void *argument)
 void Sensor_task(void *argument)
 {
   /* USER CODE BEGIN Sensor_task */
-	max30102_init();
+	DHT_DataTypedef DHT;
+	uint32_t temp = 0;
+	uint32_t humid = 0;
+	char str[50];;
   /* Infinite loop */
   for(;;)
   {
-	  HAL_UART_Transmit(&huart1, (uint8_t *) "oke\r\n", 5, 100);
-	  if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12) == GPIO_PIN_RESET)
-		  {
-			  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-			  max30102_cal();
-			  uint8_t spo2 = max30102_getSpO2();
-//			  uint8_t spo2 = max30102_getStatus();
-			  uint8_t heartRate = max30102_getHeartRate();
-+
-			  HAL_UART_Transmit(&huart1, "gotheart\r\n", 10, 500 );
-			  sprintf(str, "bpm %d spo2 %d\r\n", heartRate, spo2); //
+	  DHT_GetData(&DHT);
+	  temp = (uint32_t) DHT.Temperature;
+	  sprintf(str, "temp: %ld\r\n", temp);
+	  HAL_UART_Transmit(&huart1, (uint8_t*)str, strlen(str), 100);
+	  HAL_UART_Transmit(&huart1, (uint8_t*) "vailz", 6, 10);
 
-			  HAL_UART_Transmit(&huart1, (uint8_t*)str, strlen(str), 500 );
-			  HAL_UART_Transmit(&huart1, "done\r\n", 6, 500 );
-	      }
     osDelay(2000);
   }
   /* USER CODE END Sensor_task */

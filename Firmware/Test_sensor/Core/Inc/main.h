@@ -57,8 +57,6 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define DHT_Pin GPIO_PIN_10
-#define DHT_GPIO_Port GPIOB
 #define INT_MAX_Pin GPIO_PIN_12
 #define INT_MAX_GPIO_Port GPIOB
 

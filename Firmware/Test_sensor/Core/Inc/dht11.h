@@ -16,6 +16,7 @@ typedef struct
 
 
 void DHT_GetData (DHT_DataTypedef *DHT_Data);
-
+void delay_ms(uint32_t ms);
+void delay_us(uint32_t us);
 
 #endif /* INC_DHT11_H_ */

@@ -1,4 +1,4 @@
-freertos.c:93:6:MX_FREERTOS_Init	1
-freertos.c:142:6:StartDefaultTask	1
-freertos.c:162:6:Sensor_task	2
-freertos.c:190:6:Timer_Callback	1
+freertos.c:94:6:MX_FREERTOS_Init	1
+freertos.c:143:6:StartDefaultTask	1
+freertos.c:163:6:Sensor_task	1
+freertos.c:185:6:Timer_Callback	1
