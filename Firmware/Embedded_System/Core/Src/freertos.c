@@ -45,6 +45,7 @@
 #include "UartRingbuffer.h"
 #include "common.h"
 #include "dht11.h"
+#include "app_param.h"
 //#include "dht11.h"
 //#include "delay_timer.h"
 /* USER CODE END Includes */
@@ -92,7 +93,7 @@ typedef struct
 const char *TAG = "Task";
 
 #define Timeout 			60000
-#define MeasurePeriod 		5000
+#define MeasurePeriod 		3000
 #define	ActionPeriod 		15000
 
 #define BUFFER_ACTION 50
@@ -391,7 +392,7 @@ void IRQ_task(void *argument)
 		if ((HAL_GPIO_ReadPin(T_IRQ_GPIO_Port, T_IRQ_Pin) == 0) && (currentTick - lastTick > 500))
 		{
 			osThreadResume(LCDHandle);
-			HAL_UART_Transmit(&huart2, (uint8_t *) "[Action]: Touch\r\n", 17, 10);
+			HAL_UART_Transmit(&huart2, (uint8_t *) "\x1b[32m[Action]: Touch\r\n", 24, 10);
 			lastTick = currentTick;
 
 			//init spi touch
@@ -412,12 +413,12 @@ void IRQ_task(void *argument)
 			{
 				Mode = ACTIVE;
 				HAL_GPIO_WritePin(LCD_LED_GPIO_Port, LCD_LED_Pin, 1);
-				HAL_UART_Transmit(&huart2, (uint8_t *) "[Action]: Wake\r\n", 16, 10);
+				HAL_UART_Transmit(&huart2, (uint8_t *) "\x1b[32m[Action]: Wake\r\n", 23, 10);
 				osThreadResume(LCDHandle);
 			}
 			else
 			{
-				HAL_UART_Transmit(&huart2, (uint8_t *) "[Action]: Active\r\n", 18, 10);
+				HAL_UART_Transmit(&huart2, (uint8_t *) "\x1b[32m[Action]: Active\r\n", 24, 10);
 			}
 			osTimerStart(Timer02Handle, Timeout);
 			Time_keeper.IRQ_Time[1] = HAL_GetTick();
@@ -446,6 +447,8 @@ void Uart_task(void *argument)
 	char* action[BUFFER_ACTION];
 	ILI9341_WriteString(150, 180, "Init   ", Font_11x18, ILI9341_YELLOW, ILI9341_BLACK);
 
+	HAL_UART_Transmit(&huart2, (uint8_t *) EDS_INFO, 282, 50);
+	HAL_UART_Transmit(&huart2, (uint8_t *) EDS_INFO_FM, 143, 50);
   /* Infinite loop */
   for(;;)
   {
@@ -463,7 +466,7 @@ void LCD_Timeout(void *argument)
   /* USER CODE BEGIN LCD_Timeout */
 	HAL_GPIO_WritePin(LCD_LED_GPIO_Port, LCD_LED_Pin, 0);
 	Mode = SLEEP;
-	HAL_UART_Transmit(&huart2, (uint8_t *) "[Action]: Sleep\r\n", 17, 10);
+	HAL_UART_Transmit(&huart2, (uint8_t *) "\x1B[34m[Action]: Sleep\r\n", 24, 50);
 	osThreadSuspend(LCDHandle);
   /* USER CODE END LCD_Timeout */
 }
@@ -476,7 +479,7 @@ void Measure_Timer(void *argument)
 	char str[20];
 	ILI9341_WriteString(150, 180, "Measure", Font_11x18, ILI9341_YELLOW, ILI9341_BLACK);
 	Time_keeper.Measure_Time[0] = HAL_GetTick();
-	HAL_UART_Transmit(&huart2, (uint8_t *) "[Action]: Measure\r\n", 19, 100);
+	HAL_UART_Transmit(&huart2, (uint8_t *) "\x1B[31m[Action]: Measure\r\n", 26, 100);
 
 
 	//DHT_GetData(&DHT);
@@ -522,7 +525,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 	if (huart == &huart2)
 	{
-		HAL_UART_Transmit(&huart2, (uint8_t *) "[Action]: EXTI\r\n", 17, 10);
+		HAL_UART_Transmit(&huart2, (uint8_t *) "\x1B[31m[Action]: EXTI\r\n", 24, 10);
 		ILI9341_WriteString(150, 180, "Uart   ", Font_11x18, ILI9341_YELLOW, ILI9341_BLACK);
 		osDelay(1000);
 		HAL_UART_Receive_IT(&huart2, (uint8_t*) payload, sizeof(payload));
