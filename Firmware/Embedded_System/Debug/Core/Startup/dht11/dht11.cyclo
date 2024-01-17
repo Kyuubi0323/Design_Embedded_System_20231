@@ -1,6 +1,5 @@
-dht11.c:25:10:DWT_Delay_Init	2
-dht11.c:56:22:delay	2
-dht11.c:86:6:DHT_Start	1
-dht11.c:105:9:DHT_Check_Response	4
-dht11.c:120:9:DHT_Read	5
-dht11.c:139:6:DHT_GetData	2
+dht11.c:43:6:delay_us	2
+dht11.c:49:6:DHT_Start	1
+dht11.c:69:9:DHT_Check_Response	4
+dht11.c:84:9:DHT_Read	5
+dht11.c:103:6:DHT_GetData	2

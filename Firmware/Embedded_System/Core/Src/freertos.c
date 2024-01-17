@@ -93,11 +93,12 @@ typedef struct
 const char *TAG = "Task";
 
 #define Timeout 			60000
-#define MeasurePeriod 		3000
+#define MeasurePeriod 		5000
 #define	ActionPeriod 		15000
 
 #define BUFFER_ACTION 50
 
+DHT_DataTypedef DHT;
 Node Node_1 = {0, 0, 0, 0};
 Time_check Time_keeper = {{0}, {0}, {0} };
 Device_t Mode = ACTIVE;
@@ -105,7 +106,7 @@ myButton_t Button_1 = {30, 170, 20, 0, 0, ILI9341_LIGHTBLUE, false, NULL};
 myButton_t Button_2 = {290, 170, 20, 0, 0, ILI9341_LIGHTBLUE, false, NULL};
 
 char payload[BUFFER_ACTION];
-
+char action[BUFFER_ACTION] = {0};
 
 /* USER CODE END PD */
 
@@ -138,7 +139,7 @@ osThreadId_t Uart_userHandle;
 const osThreadAttr_t Uart_user_attributes = {
   .name = "Uart_user",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+  .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for SuperQueue */
 osMessageQueueId_t SuperQueueHandle;
@@ -274,6 +275,7 @@ void LCD_task(void *argument)
 	ILI9341_DrawLine(0, 200, 320, 200, ILI9341_WHITE);
 	ILI9341_DrawLine(250, 55, 250, 200, ILI9341_WHITE);
 	ILI9341_WriteString(10, 180, "Mode:", Font_11x18, ILI9341_WHITE, ILI9341_BLACK);
+	ILI9341_WriteString(150, 180, "Hello", Font_11x18, ILI9341_YELLOW, ILI9341_BLACK);
 	ILI9341_WriteString(100, 210, "MANDEVICES", Font_11x18, ILI9341_RED, ILI9341_BLACK);
 
 	//Data
@@ -442,20 +444,19 @@ void Uart_task(void *argument)
 {
   /* USER CODE BEGIN Uart_task */
 
-
-	Ringbuf_init();
-	char* action[BUFFER_ACTION];
-	ILI9341_WriteString(150, 180, "Init   ", Font_11x18, ILI9341_YELLOW, ILI9341_BLACK);
-
 	HAL_UART_Transmit(&huart2, (uint8_t *) EDS_INFO, 282, 50);
 	HAL_UART_Transmit(&huart2, (uint8_t *) EDS_INFO_FM, 143, 50);
+	HAL_UART_Transmit(&huart2, (uint8_t *) "[Action]: Init..\r\n", 18, 10);
   /* Infinite loop */
   for(;;)
   {
-	  if (osSemaphoreAcquire(Uart_binaryHandle, portMAX_DELAY) == osOK)
+	  if (osSemaphoreAcquire(Uart_binaryHandle, osWaitForever) == osOK)
 		  {
-		  HAL_UART_Transmit(&huart2, (uint8_t *) "[Action]: Acquire\r\n", 18, 10);
+		  	  HAL_UART_Transmit(&huart2, (uint8_t *) action, sizeof(action), 10);
+		  	  memset(action, 0, sizeof(action));
+		  	  HAL_UART_Transmit(&huart2, (uint8_t *) "[Action]: Acquire\r\n", 19, 10);
 		  }
+
   }
   /* USER CODE END Uart_task */
 }
@@ -475,30 +476,23 @@ void LCD_Timeout(void *argument)
 void Measure_Timer(void *argument)
 {
   /* USER CODE BEGIN Measure_Timer */
-	DHT_DataTypedef DHT;
-	char str[20];
+
 	ILI9341_WriteString(150, 180, "Measure", Font_11x18, ILI9341_YELLOW, ILI9341_BLACK);
 	Time_keeper.Measure_Time[0] = HAL_GetTick();
 	HAL_UART_Transmit(&huart2, (uint8_t *) "\x1B[31m[Action]: Measure\r\n", 26, 100);
 
 
-	//DHT_GetData(&DHT);
+	max30102_init();
+    //DHT_GetData(&DHT);
+    //DHT_Start ();
+   	//uint16_t Presence = DHT_Check_Response ();
 //	uint8_t temp = DHT.Temperature;
 //	sprintf(str, "temp: %ld\r\n", temp);
-//	HAL_UART_Transmit(&huart2, (uint8_t*)str, strlen(str), 100);
-//	HAL_UART_Transmit(&huart2, (uint8_t*) "vailz", 6, 10);
-
-
-
-
-
-
-
-
 
 
 	Time_keeper.Measure_Time[1] = HAL_GetTick();
 	Time_keeper.Measure_Time[2] = Time_keeper.Measure_Time[1] - Time_keeper.Measure_Time[0];
+
 	osDelay(1000);
 	ILI9341_WriteString(150, 180, "Idle   ", Font_11x18, ILI9341_YELLOW, ILI9341_BLACK);
 	if (Mode == ACTIVE)
@@ -519,21 +513,24 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	  	Node_1.spo2 = 85;
 		osSemaphoreRelease(Touch_binaryHandle);
   }
+  if (GPIO_Pin == IRQ_MAX_Pin)
+  {
+	  HAL_UART_Transmit(&huart2, (uint8_t *) "\x1B[31m[Action]: MAX \r\n", 24, 10);
+  }
 }
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 
 	if (huart == &huart2)
 	{
+		osSemaphoreRelease(Uart_binaryHandle);
 		HAL_UART_Transmit(&huart2, (uint8_t *) "\x1B[31m[Action]: EXTI\r\n", 24, 10);
 		ILI9341_WriteString(150, 180, "Uart   ", Font_11x18, ILI9341_YELLOW, ILI9341_BLACK);
 		osDelay(1000);
-		HAL_UART_Receive_IT(&huart2, (uint8_t*) payload, sizeof(payload));
-		osThreadSuspend(LCDHandle);
-		osThreadSuspend(IRQHandle);
-		osSemaphoreRelease(Uart_binaryHandle);
+		HAL_UART_Receive_IT(&huart2, (uint8_t*) action, sizeof(action));
 	}
 }
+
 
 /* USER CODE END Application */
 

@@ -31,6 +31,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include "ili9341.h"
+#include "dht11.h"
+#include "max30102.h"
 #include "touch.h"
 #include "fonts.h"
 #include "UartRingbuffer.h"
@@ -55,6 +57,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+extern char action[50];
 extern char payload[50];
 /* USER CODE END PV */
 
@@ -101,10 +104,10 @@ int main(void)
   MX_SPI1_Init();
   MX_USART2_UART_Init();
   MX_TIM11_Init();
-  MX_SPI2_Init();
-  MX_I2C2_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
+  HAL_UART_Receive_IT(&huart2, (uint8_t*) action, sizeof(action));
   /* USER CODE END 2 */
 
   /* Init scheduler */
