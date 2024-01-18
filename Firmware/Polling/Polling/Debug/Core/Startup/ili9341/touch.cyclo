@@ -1,0 +1,4 @@
+touch.c:10:13:ILI9341_TouchSelect	1
+touch.c:14:6:ILI9341_TouchUnselect	1
+touch.c:18:6:ILI9341_TouchPressed	1
+touch.c:22:6:ILI9341_TouchGetCoordinates	4

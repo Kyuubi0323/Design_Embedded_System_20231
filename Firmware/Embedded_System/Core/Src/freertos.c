@@ -317,17 +317,26 @@ void LCD_task(void *argument)
 //			ILI9341_FillCircle(Button_1.pos_x, Button_1.pos_y, Button_1.shape_r, ILI9341_RED);
 //			ILI9341_DrawCircle(Button_1.pos_x, Button_1.pos_y, Button_1.shape_r/4, ILI9341_BLACK);
 //		}
+
 	//start timer and softimer
-	//osTimerStart(Timer01Handle, ActionPeriod);
+
 	osTimerStart(Timer02Handle, Timeout);
 	osTimerStart(Timer03Handle, MeasurePeriod);
-	//ILI9341_WriteString(150, 180, "Start Timer", Font_11x18, ILI9341_PINK, ILI9341_BLACK);
 
+	max30102_init();
 	HAL_TIM_Base_Start_IT(&htim11);
   /* Infinite loop */
   for(;;)
   {
 	osThreadSuspend(LCDHandle);
+	if (HAL_GPIO_ReadPin(IRQ_MAX_GPIO_Port, IRQ_MAX_Pin) == GPIO_PIN_RESET)
+	{
+		max30102_cal();
+		Node_1.bpm = max30102_getHeartRate();
+		Node_1.spo2 = max30102_getSpO2();
+		HAL_UART_Transmit(&huart2, (uint8_t *) "\x1B[31m[Action]: Done\r\n", 24, 10);
+	}
+
 	Time_keeper.LCD_Time[0] = HAL_GetTick();
 	//Update
 
@@ -397,15 +406,11 @@ void IRQ_task(void *argument)
 			HAL_UART_Transmit(&huart2, (uint8_t *) "\x1b[32m[Action]: Touch\r\n", 24, 10);
 			lastTick = currentTick;
 
-			//init spi touch
+			//init spi lcd
 			HAL_SPI_DeInit(&hspi1);
 			hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
 			HAL_SPI_Init(&hspi1);
-//			while(ILI9341_TouchGetCoordinates(&x, &y) != true);
-//			ILI9341_WriteString(x, y, "touch", Font_11x18, ILI9341_GREEN, ILI9341_BLACK);
-//			HAL_SPI_DeInit(&hspi2);
-//			hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
-//			HAL_SPI_Init(&hspi2);
+
 			//reset Timeout Timer
 			osTimerStop(Timer02Handle);
 			osTimerStart(Timer02Handle, 100);
@@ -481,13 +486,11 @@ void Measure_Timer(void *argument)
 	Time_keeper.Measure_Time[0] = HAL_GetTick();
 	HAL_UART_Transmit(&huart2, (uint8_t *) "\x1B[31m[Action]: Measure\r\n", 26, 100);
 
+    DHT_GetData(&DHT);
 
-	max30102_init();
-    //DHT_GetData(&DHT);
-    //DHT_Start ();
    	//uint16_t Presence = DHT_Check_Response ();
-//	uint8_t temp = DHT.Temperature;
-//	sprintf(str, "temp: %ld\r\n", temp);
+	//uint8_t temp = DHT.Temperature;
+
 
 
 	Time_keeper.Measure_Time[1] = HAL_GetTick();
@@ -513,10 +516,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	  	Node_1.spo2 = 85;
 		osSemaphoreRelease(Touch_binaryHandle);
   }
-  if (GPIO_Pin == IRQ_MAX_Pin)
-  {
-	  HAL_UART_Transmit(&huart2, (uint8_t *) "\x1B[31m[Action]: MAX \r\n", 24, 10);
-  }
+
 }
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
