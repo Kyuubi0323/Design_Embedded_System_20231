@@ -74,8 +74,6 @@ char action[BUFFER_ACTION] = {0};
 
 
 
-
-DHT_t DHT1;
 float Temperature, Humidity;
 /* USER CODE END PTD */
 
@@ -184,7 +182,7 @@ int main(void)
 
 	HAL_UART_Receive_IT(&huart2, (uint8_t*) rxBuff, 8);
 	max30102_init();
-	DHT_Init(&DHT1, DHT11, &htim11, DHT_GPIO_Port, DHT_Pin);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -194,21 +192,38 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12) == GPIO_PIN_RESET)
-	          {
-	              max30102_cal();
-	              uint8_t spo2 = max30102_getSpO2();
-	              uint8_t heartReat = max30102_getHeartRate();
-	              sprintf(str, "HR: %3d, SPO2: %3d\n", heartReat, spo2);
-	          HAL_UART_Transmit(&huart2, (uint8_t*) str, 20, 20);
-	          }
-	 DHT_ReadTempHum(&DHT1);
- 	  Temperature = DHT1.Temp;
-	  Humidity = DHT1.Humi;
-	  sprintf(str1, "temp: %2f, humd: %2f\n", Temperature, Humidity);
-	 HAL_UART_Transmit(&huart2, (uint8_t*) str1, 24, 20);
-	  //HAL_GPIO_TgglePin(GPIOC, GPIO_PIN_13);
-	  HAL_Delay(3000);
+
+//	  if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12) == GPIO_PIN_RESET)
+//	          {
+//	              max30102_cal();
+//	              uint8_t spo2 = max30102_getSpO2();
+//	              uint8_t heartReat = max30102_getHeartRate();
+//	              sprintf(str, "HR: %3d, SPO2: %3d\n", heartReat, spo2);
+//	          HAL_UART_Transmit(&huart2, (uint8_t*) str, 20, 20);
+//	          }
+
+
+//		Temperature = DHT1.Temp;
+//		Humidity = DHT1.Humi;
+		sprintf(str1, "temp: %2f, humd: %2f\n", Temperature, Humidity);
+		HAL_UART_Transmit(&huart2, (uint8_t*) str1, 24, 20);
+
+
+
+		//HAL_GPIO_TgglePin(GPIOC, GPIO_PIN_13);
+		ftoa(Node_1.Temperature, StrgTemp, 1);
+		ILI9341_WriteString(150, 60, StrgTemp, Font_11x18, ILI9341_ORANGE, ILI9341_BLACK);
+
+		intToStr((int)Node_1.Humidity, StrgHumd, 2);
+		ILI9341_WriteString(150, 90, StrgHumd, Font_11x18, ILI9341_BLUE, ILI9341_BLACK);
+		ILI9341_WriteString(180, 90, "%", Font_11x18, ILI9341_BLUE, ILI9341_BLACK);
+
+		intToStr(Node_1.bpm, Strgbpm, 2);
+		ILI9341_WriteString(150, 120, Strgbpm, Font_11x18, ILI9341_GREEN, ILI9341_BLACK);
+
+		intToStr(Node_1.spo2, Strgspo2, 2);
+		ILI9341_WriteString(150, 150, Strgspo2, Font_11x18, ILI9341_PINK, ILI9341_BLACK);
+		HAL_Delay(3000);
   }
   /* USER CODE END 3 */
 }
@@ -273,6 +288,18 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		}
 
 	}
+}
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  if (GPIO_Pin == T_IRQ_Pin)
+  {
+
+	  	Node_1.Temperature = 22.5;
+	  	Node_1.bpm = 110;
+	  	Node_1.Humidity = 82.0;
+	  	Node_1.spo2 = 85;
+  }
+
 }
 /* USER CODE END 4 */
 

@@ -14,6 +14,8 @@
 "./Core/Startup/common/common.o"
 "./Core/Startup/delay_timer/delay_timer.o"
 "./Core/Startup/dht11/dht11.o"
+"./Core/Startup/ds18b20/ds18b20.o"
+"./Core/Startup/ds18b20/onewire.o"
 "./Core/Startup/ili9341/fonts.o"
 "./Core/Startup/ili9341/ili9341.o"
 "./Core/Startup/ili9341/touch.o"

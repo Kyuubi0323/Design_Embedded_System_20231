@@ -14,6 +14,7 @@ RM := rm -rf
 -include Core/Startup/ringbuf/subdir.mk
 -include Core/Startup/max30102/subdir.mk
 -include Core/Startup/ili9341/subdir.mk
+-include Core/Startup/ds18b20/subdir.mk
 -include Core/Startup/dht11/subdir.mk
 -include Core/Startup/delay_timer/subdir.mk
 -include Core/Startup/common/subdir.mk

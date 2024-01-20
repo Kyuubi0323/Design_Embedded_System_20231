@@ -32,6 +32,8 @@
 #include "ili9341.h"
 #include "dht11.h"
 #include "max30102.h"
+#include "ds18b20.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -71,11 +73,9 @@ char str[25];
 char str1[25];
 char payload[BUFFER_ACTION];
 char action[BUFFER_ACTION] = {0};
+char message[100];
+extern Ds18b20Sensor_t	ds18b20[_DS18B20_MAX_SENSORS];
 
-
-
-
-DHT_t DHT1;
 float Temperature, Humidity;
 /* USER CODE END PTD */
 
@@ -138,6 +138,7 @@ int main(void)
   MX_SPI1_Init();
   MX_USART2_UART_Init();
   MX_TIM11_Init();
+  MX_TIM10_Init();
   /* USER CODE BEGIN 2 */
 
 	char StrgTemp[6];
@@ -184,7 +185,7 @@ int main(void)
 
 	HAL_UART_Receive_IT(&huart2, (uint8_t*) rxBuff, 8);
 	max30102_init();
-	DHT_Init(&DHT1, DHT11, &htim11, DHT_GPIO_Port, DHT_Pin);
+	 DS18B20_Init(DS18B20_Resolution_12bits);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -202,14 +203,23 @@ int main(void)
 //	              uint8_t heartReat = max30102_getHeartRate();
 //	              sprintf(str, "HR: %3d, SPO2: %3d\n", heartReat, spo2);
 //	          HAL_UART_Transmit(&huart2, (uint8_t*) str, 20, 20);
-//	          }
-
-		DHT_ReadTempHum(&DHT1);
-
-		Temperature = DHT1.Temp;
-		Humidity = DHT1.Humi;
-		sprintf(str1, "temp: %2f, humd: %2f\n", Temperature, Humidity);
-		HAL_UART_Transmit(&huart2, (uint8_t*) str1, 24, 20);
+////	          }
+//	  DS18B20_ReadAll();
+//	  DS18B20_StartAll();
+//
+//	Temperature = ds18b20[0].Temperature;
+//	  				//DS18B20_GetROM(i, ROM_tmp);
+//	memset(message, 0, sizeof(message));
+//	sprintf(message,  "Temp: %2.2f\n\r", Temperature);
+//	HAL_UART_Transmit(&huart2, (uint8_t*)message, sizeof(message), 100);
+//
+//
+//	  		HAL_UART_Transmit(&huart2, (uint8_t*)"\n\r", sizeof("\n\r"), 100);
+	  		Node_1.Temperature = Temperature;
+//		Temperature = DHT1.Temp;
+//		Humidity = DHT1.Humi;
+//		sprintf(str1, "temp: %2f, humd: %2f\n", Temperature, Humidity);
+//		HAL_UART_Transmit(&huart2, (uint8_t*) str1, 24, 20);
 
 
 

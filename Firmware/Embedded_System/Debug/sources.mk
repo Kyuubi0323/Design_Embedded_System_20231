@@ -26,6 +26,7 @@ Core/Src \
 Core/Startup/common \
 Core/Startup/delay_timer \
 Core/Startup/dht11 \
+Core/Startup/ds18b20 \
 Core/Startup/ili9341 \
 Core/Startup/max30102 \
 Core/Startup/ringbuf \

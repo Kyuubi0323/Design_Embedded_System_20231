@@ -1,3 +1,7 @@
-common.c:12:6:ftoa	2
-common.c:29:5:intToStr	4
-common.c:55:6:reverse	2
+common.c:15:6:ftoa	2
+common.c:32:5:intToStr	4
+common.c:58:6:reverse	2
+common.c:73:6:Debug_Init	1
+common.c:78:6:debug_callback	3
+common.c:92:6:vprint	2
+common.c:107:6:logPC	1

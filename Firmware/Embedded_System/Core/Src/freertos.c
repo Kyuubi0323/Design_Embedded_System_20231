@@ -46,6 +46,7 @@
 #include "common.h"
 #include "dht11.h"
 #include "app_param.h"
+#include "ds18b20.h"
 //#include "dht11.h"
 //#include "delay_timer.h"
 /* USER CODE END Includes */
@@ -107,6 +108,10 @@ myButton_t Button_2 = {290, 170, 20, 0, 0, ILI9341_LIGHTBLUE, false, NULL};
 
 char payload[BUFFER_ACTION];
 char action[BUFFER_ACTION] = {0};
+char message[100];
+
+float Temperature, Humidity;
+extern Ds18b20Sensor_t	ds18b20[_DS18B20_MAX_SENSORS];
 
 /* USER CODE END PD */
 
@@ -256,7 +261,7 @@ void MX_FREERTOS_Init(void) {
 void LCD_task(void *argument)
 {
   /* USER CODE BEGIN LCD_task */
-	char StrgTemp[6];
+	char StrgTemp[4];
 	char StrgHumd[3];
 	char Strgbpm[4] ;
 	char Strgspo2[4];
@@ -323,12 +328,12 @@ void LCD_task(void *argument)
 	osTimerStart(Timer02Handle, Timeout);
 	osTimerStart(Timer03Handle, MeasurePeriod);
 
-	max30102_init();
 	HAL_TIM_Base_Start_IT(&htim11);
   /* Infinite loop */
   for(;;)
   {
 	osThreadSuspend(LCDHandle);
+	Time_keeper.LCD_Time[0] = HAL_GetTick();
 	if (HAL_GPIO_ReadPin(IRQ_MAX_GPIO_Port, IRQ_MAX_Pin) == GPIO_PIN_RESET)
 	{
 		max30102_cal();
@@ -336,10 +341,22 @@ void LCD_task(void *argument)
 		Node_1.spo2 = max30102_getSpO2();
 		HAL_UART_Transmit(&huart2, (uint8_t *) "\x1B[31m[Action]: Done\r\n", 24, 10);
 	}
+	DS18B20_ReadAll();
+	DS18B20_StartAll();
 
-	Time_keeper.LCD_Time[0] = HAL_GetTick();
+	Temperature = ds18b20[0].Temperature;
+	memset(message, 0, sizeof(message));
+	sprintf(message, "Temp: %2.2f\n\r", Temperature);
+	HAL_UART_Transmit(&huart2, (uint8_t*)message, sizeof(message), 100);
+	HAL_UART_Transmit(&huart2, (uint8_t*)"\n\r", sizeof("\n\r"), 100);
+	Node_1.Temperature = Temperature;
+
+
+
+
+
+
 	//Update
-
 	ftoa(Node_1.Temperature, StrgTemp, 1);
 	ILI9341_WriteString(150, 60, StrgTemp, Font_11x18, ILI9341_ORANGE, ILI9341_BLACK);
 
@@ -365,7 +382,7 @@ void LCD_task(void *argument)
 //			ILI9341_FillCircle(Button_1.pos_x, Button_1.pos_y, Button_1.shape_r, ILI9341_RED);
 //			ILI9341_DrawCircle(Button_1.pos_x, Button_1.pos_y, Button_1.shape_r/4, ILI9341_BLACK);
 		}
-
+	//ILI9341_WriteString(165, 60, "   ", Font_11x18, ILI9341_WHITE, ILI9341_BLACK);
 //	char* payload;
 //	sprintf(payload, "{temp}: %2.2f, {humd}: %2f %, {bpm}: %2d, {spo2}: %2d \r\n", Node_1.Temperature, Node_1.Humidity, Node_1.bpm, Node_1.spo2);
 //	HAL_UART_Transmit(&huart2, (uint8_t *) payload, strlen(payload), 200);
@@ -398,11 +415,14 @@ void IRQ_task(void *argument)
 		Time_keeper.IRQ_Time[0] = HAL_GetTick();
 		osDelay(100);
 
+
+
 		//debounce irq touch
 		currentTick = HAL_GetTick();
 		if ((HAL_GPIO_ReadPin(T_IRQ_GPIO_Port, T_IRQ_Pin) == 0) && (currentTick - lastTick > 500))
 		{
 			osThreadResume(LCDHandle);
+
 			HAL_UART_Transmit(&huart2, (uint8_t *) "\x1b[32m[Action]: Touch\r\n", 24, 10);
 			lastTick = currentTick;
 
@@ -457,6 +477,7 @@ void Uart_task(void *argument)
   {
 	  if (osSemaphoreAcquire(Uart_binaryHandle, osWaitForever) == osOK)
 		  {
+		  	  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 		  	  HAL_UART_Transmit(&huart2, (uint8_t *) action, sizeof(action), 10);
 		  	  memset(action, 0, sizeof(action));
 		  	  HAL_UART_Transmit(&huart2, (uint8_t *) "[Action]: Acquire\r\n", 19, 10);
@@ -486,7 +507,7 @@ void Measure_Timer(void *argument)
 	Time_keeper.Measure_Time[0] = HAL_GetTick();
 	HAL_UART_Transmit(&huart2, (uint8_t *) "\x1B[31m[Action]: Measure\r\n", 26, 100);
 
-    DHT_GetData(&DHT);
+    //DHT_GetData(&DHT);
 
    	//uint16_t Presence = DHT_Check_Response ();
 	//uint8_t temp = DHT.Temperature;
@@ -510,7 +531,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   if (GPIO_Pin == T_IRQ_Pin)
   {
 	  	Button_1.state = !Button_1.state;
-	  	Node_1.Temperature = 22.5;
+	  	//Node_1.Temperature = 28;
 	  	Node_1.bpm = 110;
 	  	Node_1.Humidity = 82.0;
 	  	Node_1.spo2 = 85;
@@ -524,10 +545,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	if (huart == &huart2)
 	{
 		osSemaphoreRelease(Uart_binaryHandle);
-		HAL_UART_Transmit(&huart2, (uint8_t *) "\x1B[31m[Action]: EXTI\r\n", 24, 10);
+		HAL_UART_Transmit(&huart2, (uint8_t *) "\x1B[31m[Action]: UART\r\n", 24, 10);
 		ILI9341_WriteString(150, 180, "Uart   ", Font_11x18, ILI9341_YELLOW, ILI9341_BLACK);
-		osDelay(1000);
-		HAL_UART_Receive_IT(&huart2, (uint8_t*) action, sizeof(action));
+		HAL_UART_Receive_IT(&huart2, (uint8_t*) action, 8);
 	}
 }
 
